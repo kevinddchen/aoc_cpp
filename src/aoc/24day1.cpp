@@ -3,11 +3,8 @@
 #include "common.h"
 #include "io.h"
 
-namespace
-{
-
 /**
- * Parse line into the two integers.
+ * Parse line of text into the two integers.
  */
 std::pair<int, int> parse_line(const std::string& line)
 {
@@ -17,11 +14,12 @@ std::pair<int, int> parse_line(const std::string& line)
     return {a, b};
 }
 
-void part1()
+/**
+ * Get the left and right lists of numbers.
+ */
+std::pair<std::vector<int>, std::vector<int>> get_lists()
 {
-    const auto lines = aoc::read_lines("data/24day1.txt");
-
-    // get the two lists of integers.
+    const std::vector<std::string> lines = aoc::read_lines("data/24day1.txt");
 
     std::vector<int> left_list(lines.size());
     std::vector<int> right_list(lines.size());
@@ -32,6 +30,13 @@ void part1()
         right_list[i] = b;
     }
 
+    return std::make_pair(std::move(left_list), std::move(right_list));
+}
+
+void part1(std::vector<int> left_list, std::vector<int> right_list)
+{
+    assert(left_list.size() == right_list.size());
+
     // sort.
 
     std::sort(left_list.begin(), left_list.end());
@@ -40,16 +45,18 @@ void part1()
     // compute total distance.
 
     int distance = 0;
-    for (int i = 0; i < lines.size(); ++i) {
+    for (int i = 0; i < left_list.size(); ++i) {
         distance += std::abs(left_list[i] - right_list[i]);
     }
 
     printf("Day 1 Part 1: %d\n", distance);
 }
 
-}  // namespace
-
 int main()
 {
-    part1();
+    const auto [left_list, right_list] = get_lists();
+
+    part1(left_list, right_list);
+
+    printf("%d\n", left_list[0]);
 }
