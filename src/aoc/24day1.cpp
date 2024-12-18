@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <unordered_map>
 
 #include "common.h"
 #include "io.h"
@@ -35,6 +36,7 @@ std::pair<std::vector<int>, std::vector<int>> get_lists()
 
 void part1(std::vector<int> left_list, std::vector<int> right_list)
 {
+    // NOTE: lists are deliberately copied so that the sort below doesn't change the original lists
     assert(left_list.size() == right_list.size());
 
     // sort.
@@ -52,11 +54,35 @@ void part1(std::vector<int> left_list, std::vector<int> right_list)
     printf("Day 1 Part 1: %d\n", distance);
 }
 
+void part2(const std::vector<int>& left_list, const std::vector<int>& right_list)
+{
+    // count all occurrences in `right_list`.
+
+    std::unordered_map<int, int> occurrences;
+    for (auto n : right_list) {
+        if (occurrences.contains(n)) {
+            ++occurrences[n];
+        } else {
+            occurrences[n] = 1;
+        }
+    }
+
+    // compute total similarity.
+
+    int similarity = 0;
+    for (auto n : left_list) {
+        if (occurrences.contains(n)) {
+            similarity += n * occurrences[n];
+        }
+    }
+
+    printf("Day 1 Part 2: %d\n", similarity);
+}
+
 int main()
 {
     const auto [left_list, right_list] = get_lists();
 
     part1(left_list, right_list);
-
-    printf("%d\n", left_list[0]);
+    part2(left_list, right_list);
 }
