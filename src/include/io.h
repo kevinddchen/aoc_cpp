@@ -25,6 +25,9 @@ std::vector<std::string> read_lines(const char* filename)
     return lines;
 }
 
+/**
+ * Split the string `str` using the separator `sep`.
+ */
 std::vector<std::string> split(const std::string& str, const std::string& sep)
 {
     assert(sep.size() > 0);

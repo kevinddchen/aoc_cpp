@@ -2,7 +2,7 @@
 #include "io.h"
 
 /**
- * Get all reports.
+ * Get all reports from file.
  */
 std::vector<std::vector<int>> get_reports(const char* filename)
 {
@@ -24,38 +24,86 @@ std::vector<std::vector<int>> get_reports(const char* filename)
 }
 
 /**
- * Returns whether a report is safe.
+ * Copy a report with ith level removed.
  */
-bool is_safe(const std::vector<int>& report)
+std::vector<int> copy_exclude_ith(const std::vector<int>& report, int i)
 {
-    const auto first_comparison = report[0] <=> report[1];
+    std::vector<int> new_report = report;
+    new_report.erase(new_report.begin() + i);
+    return new_report;
+}
 
+/**
+ * Returns whether a report is safe.
+ * @param report Report, containing list of levels
+ * @param can_tolerate If true, can remove a single level from the report
+ */
+bool is_safe(const std::vector<int>& report, bool can_tolerate = false)
+{
+    // first, compute all comparisons and differences
+    std::vector<std::strong_ordering> comparisons(report.size() - 1, std::strong_ordering::equal);
+    std::vector<int> differences(report.size() - 1);
     for (int i = 0; i <= report.size() - 2; ++i) {
-        // comparisons for neighboring levels must match the first one.
-        const auto curr_comparison = report[i] <=> report[i + 1];
-        if (curr_comparison != first_comparison) {
-            return false;
+        comparisons[i] = report[i] <=> report[i + 1];
+        differences[i] = abs(report[i] - report[i + 1]);
+    }
+
+    // check that all differences are 1, 2, or 3
+    for (int i = 0; i < differences.size(); ++i) {
+        if (differences[i] == 0 || differences[i] > 3) {
+            // there is an issue...
+            if (can_tolerate) {
+                // we can try removing level i or i+1...
+                return is_safe(copy_exclude_ith(report, i)) || is_safe(copy_exclude_ith(report, i + 1));
+            } else {
+                return false;
+            }
         }
-        // difference must be 1, 2, or 3.
-        const int diff = abs(report[i] - report[i + 1]);
-        if (diff == 0 || diff > 3) {
-            return false;
+    }
+
+    // check that all comparisons are equal to the previous one
+    for (int i = 1; i < differences.size(); ++i) {
+        if (comparisons[i] != comparisons[i - 1]) {
+            // there is an issue...
+            if (can_tolerate) {
+                // we can try removing level i-1, i, or i+1...
+                return is_safe(copy_exclude_ith(report, i - 1)) || is_safe(copy_exclude_ith(report, i)) ||
+                       is_safe(copy_exclude_ith(report, i + 1));
+            } else {
+                return false;
+            }
         }
     }
 
     return true;
 }
 
-void part1(const std::vector<std::vector<int>>& reports)
+/**
+ * Count the number of safe reports.
+ * @param reports List of reports
+ * @param can_tolerate If true, can remove a single level from a report
+ */
+int count_safe(const std::vector<std::vector<int>>& reports, bool can_tolerate)
 {
-    int count_safe = 0;
+    int num_safe = 0;
     for (const auto& report : reports) {
-        if (is_safe(report)) {
-            ++count_safe;
+        if (is_safe(report, can_tolerate)) {
+            ++num_safe;
         }
     }
+    return num_safe;
+}
 
-    printf("Day 2 Part 1: %d\n", count_safe);
+void part1(const std::vector<std::vector<int>>& reports)
+{
+    const int num_safe = count_safe(reports, false);
+    printf("Day 2 Part 1: %d\n", num_safe);
+}
+
+void part2(const std::vector<std::vector<int>>& reports)
+{
+    const int num_safe = count_safe(reports, true);
+    printf("Day 2 Part 2: %d\n", num_safe);
 }
 
 int main(int argc, char** argv)
@@ -66,6 +114,7 @@ int main(int argc, char** argv)
     const auto reports = get_reports(filename);
 
     part1(reports);
+    part2(reports);
 
     return 0;
 }
