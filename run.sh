@@ -13,6 +13,7 @@ if [[ $# -ne 1 ]]; then
 fi
 
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $DIR
 
 make bin/$1
-./bin/$1
+./bin/$1 data/$1.txt

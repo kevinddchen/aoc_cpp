@@ -18,9 +18,9 @@ std::pair<int, int> parse_line(const std::string& line)
 /**
  * Get the left and right lists of numbers.
  */
-std::pair<std::vector<int>, std::vector<int>> get_lists()
+std::pair<std::vector<int>, std::vector<int>> get_lists(const char* filename)
 {
-    const std::vector<std::string> lines = aoc::read_lines("data/24day1.txt");
+    const std::vector<std::string> lines = aoc::read_lines(filename);
 
     std::vector<int> left_list(lines.size());
     std::vector<int> right_list(lines.size());
@@ -79,10 +79,15 @@ void part2(const std::vector<int>& left_list, const std::vector<int>& right_list
     printf("Day 1 Part 2: %d\n", similarity);
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    const auto [left_list, right_list] = get_lists();
+    assert(argc == 2);
+    const char* filename = argv[1];
+
+    const auto [left_list, right_list] = get_lists(filename);
 
     part1(left_list, right_list);
     part2(left_list, right_list);
+
+    return 0;
 }

@@ -10,7 +10,7 @@ namespace aoc
 /**
  * Read lines from a text file.
  */
-std::vector<std::string> read_lines(const std::string& filename)
+std::vector<std::string> read_lines(const char* filename)
 {
     std::fstream f(filename);
 
