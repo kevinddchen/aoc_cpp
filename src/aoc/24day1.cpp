@@ -9,10 +9,10 @@
  */
 std::pair<int, int> parse_line(const std::string& line)
 {
-    // HACK: rely on fact that integers are always 5-digits.
-    const int a = std::stoi(line.substr(0, 5));
-    const int b = std::stoi(line.substr(8, 5));
-    return {a, b};
+    // NOTE: rely on fact that integers are separated by three spaces
+    const auto parts = aoc::split(line, "   ");
+    assert(parts.size() == 2);
+    return std::make_pair(std::stoi(parts[0]), std::stoi(parts[1]));
 }
 
 /**
@@ -34,17 +34,17 @@ std::pair<std::vector<int>, std::vector<int>> get_lists(const char* filename)
     return std::make_pair(std::move(left_list), std::move(right_list));
 }
 
-void part1(std::vector<int> left_list, std::vector<int> right_list)
+void part1(const std::vector<int>& orig_left_list, const std::vector<int>& orig_right_list)
 {
-    // NOTE: lists are deliberately copied so that the sort below doesn't change the original lists
-    assert(left_list.size() == right_list.size());
+    std::vector<int> left_list = orig_left_list;
+    std::vector<int> right_list = orig_right_list;
 
-    // sort.
+    // sort
 
     std::sort(left_list.begin(), left_list.end());
     std::sort(right_list.begin(), right_list.end());
 
-    // compute total distance.
+    // compute total distance
 
     int distance = 0;
     for (int i = 0; i < left_list.size(); ++i) {
@@ -56,7 +56,7 @@ void part1(std::vector<int> left_list, std::vector<int> right_list)
 
 void part2(const std::vector<int>& left_list, const std::vector<int>& right_list)
 {
-    // count all occurrences in `right_list`.
+    // count all occurrences in `right_list`
 
     std::unordered_map<int, int> occurrences;
     for (auto n : right_list) {
@@ -67,7 +67,7 @@ void part2(const std::vector<int>& left_list, const std::vector<int>& right_list
         }
     }
 
-    // compute total similarity.
+    // compute total similarity
 
     int similarity = 0;
     for (auto n : left_list) {
