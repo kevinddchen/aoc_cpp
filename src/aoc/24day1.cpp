@@ -20,7 +20,7 @@ std::pair<int, int> parse_line(const std::string& line)
  */
 std::pair<std::vector<int>, std::vector<int>> get_lists(const char* filename)
 {
-    const std::vector<std::string> lines = aoc::read_lines(filename);
+    const auto lines = aoc::read_lines(filename);
 
     std::vector<int> left_list(lines.size());
     std::vector<int> right_list(lines.size());
