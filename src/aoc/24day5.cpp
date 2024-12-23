@@ -11,11 +11,7 @@ struct Rule {
     Rule(int first, int second) : first(first), second(second) {}
 };
 
-struct Update {
-    std::vector<int> pages;
-
-    Update(std::vector<int> pages) : pages(std::move(pages)) {}
-};
+using Update = std::vector<int>;
 
 /**
  * Given lines, parse the rules.
@@ -57,6 +53,9 @@ std::vector<Update> get_updates(
     return updates;
 }
 
+/**
+ * Get rules and updates from text file.
+ */
 std::pair<std::vector<Rule>, std::vector<Update>> get_rules_and_updates(const char* filename)
 {
     const auto lines = aoc::read_lines(filename);
@@ -71,12 +70,59 @@ std::pair<std::vector<Rule>, std::vector<Update>> get_rules_and_updates(const ch
     return std::make_pair(std::move(rules), std::move(updates));
 }
 
+/**
+ * Check that the update satisfies the given rule.
+ */
+bool check_rule(const Update& update, const Rule& rule)
+{
+    // if one of the two numbers in `rule` cannot be found, then default to `true`
+    const auto rule_first = std::find(update.begin(), update.end(), rule.first);
+    if (rule_first == update.end()) {
+        return true;
+    }
+
+    const auto rule_second = std::find(update.begin(), update.end(), rule.second);
+    if (rule_second == update.end()) {
+        return true;
+    }
+
+    return rule_first < rule_second;
+}
+
+/**
+ * Check that the update satisfies all given rules.
+ */
+bool check_rules(const Update& update, const std::vector<Rule>& rules)
+{
+    for (const auto& rule : rules) {
+        if (!check_rule(update, rule)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void part1(const std::vector<Update>& updates, const std::vector<Rule>& rules)
+{
+    int sum_of_middle = 0;
+
+    for (const auto& update : updates) {
+        if (check_rules(update, rules)) {
+            const int size = update.size();
+            sum_of_middle += update[(size - 1) / 2];
+        }
+    }
+
+    printf("Day 5 Part 1: %d\n", sum_of_middle);
+}
 int main(int argc, char** argv)
 {
     assert(argc == 2);
     const char* filename = argv[1];
 
-    get_rules_and_updates(filename);
+    const auto [rules, updates] = get_rules_and_updates(filename);
+
+    part1(updates, rules);
 
     return 0;
 }
