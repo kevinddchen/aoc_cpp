@@ -45,4 +45,16 @@ std::vector<std::string> split(const std::string& str, const std::string& sep)
     return parts;
 }
 
+/**
+ * Convert vector of strings into vector of integers.
+ */
+std::vector<int> stoi(const std::vector<std::string>& strs)
+{
+    std::vector<int> ints(strs.size());
+    for (int i = 0; i < strs.size(); ++i) {
+        ints[i] = std::stoi(strs[i]);
+    }
+    return ints;
+}
+
 }  // namespace aoc
