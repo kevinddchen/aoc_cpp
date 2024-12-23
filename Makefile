@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -I./src/include -Wall -std=c++20 -O2
+CFLAGS = -I./src/include -Wall -std=c++20 -O3
 SRC = ./src/aoc
 BIN = ./bin
 DATA = ./data

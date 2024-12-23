@@ -114,9 +114,10 @@ void part2(const Puzzle& puzzle)
             return false;
         }
 
-        std::vector<char> corners;
-        for (const auto& dir : DIRECTIONS) {
-            corners.push_back(puzzle.at(x + dir[0], y + dir[1]));
+        std::vector<char> corners(4);
+        for (int i = 0; i < corners.size(); ++i) {
+            const auto& dir = DIRECTIONS[i];
+            corners[i] = puzzle.at(x + dir[0], y + dir[1]);
         }
 
         // need two "M" and two "S"

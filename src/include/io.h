@@ -36,11 +36,11 @@ std::vector<std::string> split(const std::string& str, const std::string& sep)
     std::string::size_type start = 0;
     std::string::size_type end = str.find(sep, start);
     while (end != std::string::npos) {
-        parts.push_back(str.substr(start, end - start));
+        parts.emplace_back(str.substr(start, end - start));
         start = end + sep.size();
         end = str.find(sep, start);
     }
-    parts.push_back(str.substr(start));
+    parts.emplace_back(str.substr(start));
 
     return parts;
 }
