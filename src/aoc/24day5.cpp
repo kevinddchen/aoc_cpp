@@ -121,12 +121,12 @@ void part1(const std::vector<Update>& updates, const std::vector<Rule>& rules)
 
 Update order_update(const Update& update, const std::vector<Rule>& rules)
 {
-    // first, we encode the relevant rules as a graph: the relation A < B is
+    // First, we encode the relevant rules as a graph: the relation A < B is
     // encoded as a directed edge A -> B. We represent this graph as an
     // adjacency matrix, where M[A][B] is non-zero iff A -> B is an edge in the
     // graph.
 
-    std::vector<std::vector<char>> rule_graph;
+    std::vector<std::vector<bool>> rule_graph;
     {
         // initialize
         rule_graph.reserve(update.size());
@@ -146,13 +146,14 @@ Update order_update(const Update& update, const std::vector<Rule>& rules)
         }
     }
 
-    // second, we find a path in the graph that connects all nodes
+    // Second, we find a path in the graph that connects all nodes. Such a path
+    // will correspond to the ordered update.
 
     Update ordered_update;
     {
         // HACK: if we assume the rules are complete, i.e. our graph is a total
-        // ordering, then we can find such a path by just sorting the nodes by the
-        // number of outgoing edges.
+        // ordering, then we can find such a path by just sorting the nodes by
+        // the number of outgoing edges.
 
         // list of {num_outgoing_edges, number} pairs
         std::vector<std::pair<int, int>> edge_counts;
@@ -167,7 +168,7 @@ Update order_update(const Update& update, const std::vector<Rule>& rules)
         auto cmp = [](const std::pair<int, int>& x, const std::pair<int, int>& y) -> bool { return x.first > y.first; };
         std::sort(edge_counts.begin(), edge_counts.end(), cmp);
 
-        // check our assumption was correct
+        // check our HACK assumption was correct
         for (int i = 0; i < edge_counts.size(); ++i) {
             assert(edge_counts[i].first == edge_counts.size() - i - 1);
             ordered_update.emplace_back(edge_counts[i].second);
@@ -191,7 +192,6 @@ void part2(const std::vector<Update>& updates, const std::vector<Rule>& rules)
 
     printf("Day 5 Part 2: %d\n", sum_of_middle);
 }
-
 
 // ----------------------------------------------------------------------------
 
