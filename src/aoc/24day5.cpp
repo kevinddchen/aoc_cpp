@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <numeric>
 
 #include "common.h"
 #include "io.h"
@@ -18,7 +19,7 @@ using Update = std::vector<int>;
  * @param begin Iterator to start of vector of lines.
  * @param end Iterator to end of vector of lines.
  */
-std::vector<Rule> get_rules(
+std::vector<Rule> parse_rules(
     std::vector<std::string>::const_iterator begin, std::vector<std::string>::const_iterator end)
 {
     std::vector<Rule> rules;
@@ -26,7 +27,7 @@ std::vector<Rule> get_rules(
 
     for (auto it = begin; it != end; ++it) {
         const auto parts = aoc::split(*it, "|");
-        assert(parts.size() == 2);
+        assert(parts.size() == 2);  // rule must contain two integers
         rules.emplace_back(std::stoi(parts[0]), std::stoi(parts[1]));
     }
 
@@ -38,7 +39,7 @@ std::vector<Rule> get_rules(
  * @param begin Iterator to start of vector of lines.
  * @param end Iterator to end of vector of lines.
  */
-std::vector<Update> get_updates(
+std::vector<Update> parse_updates(
     std::vector<std::string>::const_iterator begin, std::vector<std::string>::const_iterator end)
 {
     std::vector<Update> updates;
@@ -46,7 +47,7 @@ std::vector<Update> get_updates(
 
     for (auto it = begin; it != end; ++it) {
         const auto parts = aoc::split(*it, ",");
-        assert(parts.size() % 2 == 1);
+        assert(parts.size() % 2 == 1);  // update should have odd number of pages
         updates.emplace_back(aoc::stoi(parts));
     }
 
@@ -64,29 +65,29 @@ std::pair<std::vector<Rule>, std::vector<Update>> get_rules_and_updates(const ch
     const auto split = std::find(lines.begin(), lines.end(), "");
     assert(split != lines.end());
 
-    const auto rules = get_rules(lines.begin(), split);
-    const auto updates = get_updates(split + 1, lines.end());
+    const auto rules = parse_rules(lines.begin(), split);
+    const auto updates = parse_updates(split + 1, lines.end());
 
     return std::make_pair(std::move(rules), std::move(updates));
 }
+
+// ----------------------------------------------------------------------------
 
 /**
  * Check that the update satisfies the given rule.
  */
 bool check_rule(const Update& update, const Rule& rule)
 {
-    // if one of the two numbers in `rule` cannot be found, then default to `true`
-    const auto rule_first = std::find(update.begin(), update.end(), rule.first);
-    if (rule_first == update.end()) {
+    const auto rule_first_ptr = std::find(update.begin(), update.end(), rule.first);
+    const auto rule_second_ptr = std::find(update.begin(), update.end(), rule.second);
+
+    // if either number cannot be found, then return `true` since the rule is vacuously satisfied
+    if (rule_first_ptr == update.end() || rule_second_ptr == update.end()) {
         return true;
     }
 
-    const auto rule_second = std::find(update.begin(), update.end(), rule.second);
-    if (rule_second == update.end()) {
-        return true;
-    }
-
-    return rule_first < rule_second;
+    // check rule is satisfied
+    return rule_first_ptr < rule_second_ptr;
 }
 
 /**
@@ -115,6 +116,85 @@ void part1(const std::vector<Update>& updates, const std::vector<Rule>& rules)
 
     printf("Day 5 Part 1: %d\n", sum_of_middle);
 }
+
+// ----------------------------------------------------------------------------
+
+Update order_update(const Update& update, const std::vector<Rule>& rules)
+{
+    // First, we encode the relevant rules as a graph: the relation A < B is
+    // encoded as a directed edge A -> B. We represent this graph as an
+    // adjacency matrix, where M[A][B] is non-zero iff A -> B is an edge in the
+    // graph.
+
+    std::vector<std::vector<bool>> rule_graph;
+    {
+        // initialize
+        rule_graph.reserve(update.size());
+        for (int i = 0; i < update.size(); ++i) {
+            rule_graph.emplace_back(update.size(), false);
+        }
+
+        // fill in edges
+        for (const auto& rule : rules) {
+            const auto rule_first_ptr = std::find(update.begin(), update.end(), rule.first);
+            const auto rule_second_ptr = std::find(update.begin(), update.end(), rule.second);
+            if (rule_first_ptr != update.end() && rule_second_ptr != update.end()) {
+                const int a = rule_first_ptr - update.begin();
+                const int b = rule_second_ptr - update.begin();
+                rule_graph[a][b] = true;
+            }
+        }
+    }
+
+    // Second, we find a path in the graph that connects all nodes. Such a path
+    // will correspond to the ordered update.
+
+    Update ordered_update;
+    {
+        // HACK: if we assume the rules are complete, i.e. our graph is a total
+        // ordering, then we can find such a path by just sorting the nodes by
+        // the number of outgoing edges.
+
+        // list of {num_outgoing_edges, number} pairs
+        std::vector<std::pair<int, int>> edge_counts;
+
+        edge_counts.reserve(update.size());
+        for (int i = 0; i < update.size(); ++i) {
+            const int num_outgoing_edges = std::accumulate(rule_graph[i].begin(), rule_graph[i].end(), 0);
+            edge_counts.emplace_back(num_outgoing_edges, update[i]);
+        }
+
+        // sort by first key in decreasing order, i.e. largest first key at front
+        auto cmp = [](const std::pair<int, int>& x, const std::pair<int, int>& y) -> bool { return x.first > y.first; };
+        std::sort(edge_counts.begin(), edge_counts.end(), cmp);
+
+        // check our HACK assumption was correct
+        for (int i = 0; i < edge_counts.size(); ++i) {
+            assert(edge_counts[i].first == edge_counts.size() - i - 1);
+            ordered_update.emplace_back(edge_counts[i].second);
+        }
+    }
+
+    return ordered_update;
+}
+
+void part2(const std::vector<Update>& updates, const std::vector<Rule>& rules)
+{
+    int sum_of_middle = 0;
+
+    for (const auto& update : updates) {
+        if (!check_rules(update, rules)) {
+            const auto ordered_update = order_update(update, rules);
+            const int size = ordered_update.size();
+            sum_of_middle += ordered_update[(size - 1) / 2];
+        }
+    }
+
+    printf("Day 5 Part 2: %d\n", sum_of_middle);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int argc, char** argv)
 {
     assert(argc == 2);
@@ -123,6 +203,7 @@ int main(int argc, char** argv)
     const auto [rules, updates] = get_rules_and_updates(filename);
 
     part1(updates, rules);
+    part2(updates, rules);
 
     return 0;
 }
